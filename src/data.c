@@ -72,39 +72,39 @@ typedef struct data_printer_context {
 
 static data_meta_type_t dmt[DATA_COUNT] = {
 	//  DATA_DATA
-	{ array_element_size	   : sizeof(data_t*),
-	  array_is_boxed	   : true,
-	  array_elementwise_import : NULL,
-	  array_element_release	   : (array_element_release_fn) data_free,
-	  value_release		   : (value_release_fn) data_free },
+	{ .array_element_size       = sizeof(data_t*),
+	  .array_is_boxed           = true,
+	  .array_elementwise_import = NULL,
+	  .array_element_release    = (array_element_release_fn) data_free,
+	  .value_release            = (value_release_fn) data_free },
 
 	//  DATA_INT
-	{ array_element_size	   : sizeof(int),
-	  array_is_boxed	   : false,
-	  array_elementwise_import : NULL,
-	  array_element_release	   : NULL,
-	  value_release		   : (value_release_fn) free },
+	{ .array_element_size       = sizeof(int),
+	  .array_is_boxed           = false,
+	  .array_elementwise_import = NULL,
+	  .array_element_release    = NULL,
+	  .value_release            = (value_release_fn) free },
 
 	//  DATA_DOUBLE
-	{ array_element_size	   : sizeof(double),
-	  array_is_boxed	   : false,
-	  array_elementwise_import : NULL,
-	  array_element_release	   : NULL,
-	  value_release		   : (value_release_fn) free },
+	{ .array_element_size       = sizeof(double),
+	  .array_is_boxed           = false,
+	  .array_elementwise_import = NULL,
+	  .array_element_release    = NULL,
+	  .value_release            = (value_release_fn) free },
 
 	//  DATA_STRING
-	{ array_element_size	   : sizeof(char*),
-	  array_is_boxed	   : true,
-	  array_elementwise_import : (array_elementwise_import_fn) strdup,
-	  array_element_release	   : (array_element_release_fn) free,
-	  value_release		   : (value_release_fn) free },
+	{ .array_element_size       = sizeof(char*),
+	  .array_is_boxed           = true,
+	  .array_elementwise_import = (array_elementwise_import_fn) strdup,
+	  .array_element_release    = (array_element_release_fn) free,
+	  .value_release            = (value_release_fn) free },
 
 	//  DATA_ARRAY
-	{ array_element_size	   : sizeof(data_array_t*),
-	  array_is_boxed	   : true,
-	  array_elementwise_import : NULL,
-	  array_element_release	   : (array_element_release_fn) data_array_free ,
-	  value_release		   : (value_release_fn) data_array_free },
+	{ .array_element_size       = sizeof(data_array_t*),
+	  .array_is_boxed           = true,
+	  .array_elementwise_import = NULL,
+	  .array_element_release    = (array_element_release_fn) data_array_free ,
+	  .value_release            = (value_release_fn) data_array_free },
 };
 
 static void print_json_data(data_printer_context_t *printer_ctx, data_t *data, char *format, FILE *file);
@@ -128,27 +128,27 @@ static void print_csv_data(data_printer_context_t *printer_ctx, data_t *data, ch
 static void print_csv_string(data_printer_context_t *printer_ctx, const char *data, char *format, FILE *file);
 
 data_printer_t data_json_printer = {
-	print_data   : print_json_data,
-	print_array  : print_json_array,
-	print_string : print_json_string,
-	print_double : print_json_double,
-	print_int    : print_json_int
+	.print_data   = print_json_data,
+	.print_array  = print_json_array,
+	.print_string = print_json_string,
+	.print_double = print_json_double,
+	.print_int    = print_json_int
 };
 
 data_printer_t data_kv_printer = {
-	print_data   : print_kv_data,
-	print_array  : print_json_array,
-	print_string : print_kv_string,
-	print_double : print_kv_double,
-	print_int    : print_kv_int
+	.print_data   = print_kv_data,
+	.print_array  = print_json_array,
+	.print_string = print_kv_string,
+	.print_double = print_kv_double,
+	.print_int    = print_kv_int
 };
 
 data_printer_t data_csv_printer = {
-	print_data   : print_csv_data,
-	print_array  : print_json_array,
-	print_string : print_csv_string,
-	print_double : print_json_double,
-	print_int    : print_json_int
+	.print_data   = print_csv_data,
+	.print_array  = print_json_array,
+	.print_string = print_csv_string,
+	.print_double = print_json_double,
+	.print_int    = print_json_int
 };
 
 static _Bool import_values(void* dst, void* src, int num_values, data_type_t type) {
@@ -302,6 +302,7 @@ void data_free(data_t *data) {
 		data_t *prev_data = data;
 		if (dmt[data->type].value_release)
 			dmt[data->type].value_release(data->value);
+		free(data->format);
 		free(data->pretty_key);
 		free(data->key);
 		data = data->next;
@@ -312,15 +313,15 @@ void data_free(data_t *data) {
 void data_print(data_t* data, FILE *file, data_printer_t *printer, void *aux)
 {
 	data_printer_context_t ctx = {
-		printer : printer,
-		aux     : aux
+		.printer = printer,
+		.aux     = aux
 	};
 	ctx.printer->print_data(&ctx, data, NULL, file);
-	fputc('\n', file);
+	if (file) {
+		fputc('\n', file);
+		fflush(file);
+	}
 }
-
-/* JSON printer */
-static void print_json_array(data_printer_context_t *printer_ctx, data_array_t *array, char *format, FILE *file);
 
 static void print_value(data_printer_context_t *printer_ctx, FILE *file, data_type_t type, void *value, char *format) {
 	switch (type) {
@@ -346,6 +347,7 @@ static void print_value(data_printer_context_t *printer_ctx, FILE *file, data_ty
 	}
 }
 
+/* JSON printer */
 static void print_json_array(data_printer_context_t *printer_ctx, data_array_t *array, char *format, FILE *file) {
 	int element_size = dmt[array->type].array_element_size;
 	char buffer[element_size];
@@ -392,7 +394,7 @@ static void print_json_string(data_printer_context_t *printer_ctx, const char *s
 
 static void print_json_double(data_printer_context_t *printer_ctx, double data, char *format, FILE *file)
 {
-	fprintf(file, "%f", data);
+	fprintf(file, "%.3f", data);
 }
 
 static void print_json_int(data_printer_context_t *printer_ctx, int data, char *format, FILE *file)
@@ -411,17 +413,22 @@ static void print_kv_data(data_printer_context_t *printer_ctx, data_t *data, cha
 		/* put a : between the first non-labeled and labeled */
 		if (separator) {
 			if (labeled && !was_labeled && !written_title) {
-				fprintf(file, ": ");
+				fprintf(file, "\n");
 				written_title = true;
 				separator = false;
 			} else {
 				if (was_labeled)
-					fprintf(file, ", ");
+					fprintf(file, "\n");
 				else
 					fprintf(file, " ");
 			}
 		}
-		fprintf(file, "%s", data->pretty_key);
+		if (!strcmp(data->key, "time"))
+                    /* fprintf(file, "") */ ;
+                else if (!strcmp(data->key, "model"))
+                    fprintf(file, ":\t");
+                else
+                    fprintf(file, "\t%s:\t", data->pretty_key);
 		if (labeled)
 			fputc(' ', file);
 		print_value(printer_ctx, file, data->type, data->value, data->format);
@@ -433,7 +440,7 @@ static void print_kv_data(data_printer_context_t *printer_ctx, data_t *data, cha
 
 static void print_kv_double(data_printer_context_t *printer_ctx, double data, char *format, FILE *file)
 {
-	fprintf(file, format ? format : "%f", data);
+	fprintf(file, format ? format : "%.3f", data);
 }
 
 static void print_kv_int(data_printer_context_t *printer_ctx, int data, char *format, FILE *file)
@@ -460,10 +467,9 @@ static void print_csv_data(data_printer_context_t *printer_ctx, data_t *data, ch
 	++csv->data_recursion;
 	for (i = 0; fields[i]; ++i) {
 		const char *key = fields[i];
-		data_t *iter, *found = NULL;
+		data_t *found = NULL;
 		if (i) fprintf(file, "%s", csv->separator);
-		iter = data;
-		for (iter = data, found; !found && iter; iter = iter->next)
+		for (data_t *iter = data; !found && iter; iter = iter->next)
 			if (strcmp(iter->key, key) == 0)
 				found = iter;
 
@@ -495,6 +501,8 @@ void *data_csv_init(const char **fields, int num_fields)
 	int csv_fields = 0;
 	int i, j;
 	const char **allowed = NULL;
+	int *use_count = NULL;
+	int num_unique_fields;
 	if (!csv)
 		goto alloc_error;
 
@@ -517,23 +525,32 @@ void *data_csv_init(const char **fields, int num_fields)
 			allowed[i] = allowed[j];
 			++i;
 			++j;
+
 		}
 	}
-	num_fields = i;
+	num_unique_fields = i;
 
-	csv->fields = calloc(num_fields + 1, sizeof(const char**));
+	csv->fields = calloc(num_unique_fields + 1, sizeof(const char**));
 	if (!csv->fields)
 		goto alloc_error;
 
+	use_count = calloc(num_unique_fields, sizeof(*use_count));
+	if (!use_count)
+		goto alloc_error;
+
 	for (i = 0; i < num_fields; ++i) {
-		if (bsearch(&fields[i], allowed, num_fields, sizeof(const char*),
-			    (void*) compare_strings)) {
+		const char **field = bsearch(&fields[i], allowed, num_unique_fields, sizeof(const char*),
+					     (void*) compare_strings);
+		int *field_use_count = use_count + (field - allowed);
+		if (field && !*field_use_count) {
 			csv->fields[csv_fields] = fields[i];
 			++csv_fields;
+			++*field_use_count;
 		}
 	}
 	csv->fields[csv_fields] = NULL;
 	free(allowed);
+	free(use_count);
 
 	// Output the CSV header
 	for (i = 0; csv->fields[i]; ++i) {
@@ -543,6 +560,7 @@ void *data_csv_init(const char **fields, int num_fields)
 	return csv;
 
  alloc_error:
+	free(use_count);
 	free(allowed);
 	if (csv) free(csv->fields);
 	free(csv);

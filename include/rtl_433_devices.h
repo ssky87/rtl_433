@@ -12,7 +12,7 @@
 		DECL(elv_em1000) \
 		DECL(elv_ws2000) \
 		DECL(lacrossetx) \
-		DECL(acurite5n1) \
+		DECL(template) \
 		DECL(acurite_rain_gauge) \
 		DECL(acurite_th) \
 		DECL(oregon_scientific) \
@@ -27,7 +27,7 @@
 		DECL(calibeur_RF104) \
 		DECL(X10_RF) \
 		DECL(DSC) \
-		DECL(brennstuhl_rcs_2044) \
+		DECL(brennenstuhl_rcs_2044) \
 		DECL(gt_wt_02) \
 		DECL(danfoss_CFR) \
 		DECL(ec3k) \
@@ -35,7 +35,7 @@
 		DECL(chuango) \
 		DECL(generic_remote) \
 		DECL(tfa_twin_plus_303049) \
-		DECL(digitech_ws) \
+		DECL(fineoffset_wh1080) \
 		DECL(wt450) \
 		DECL(lacrossews) \
 		DECL(esperanza_ews) \
@@ -43,17 +43,52 @@
 		DECL(kw9015b) \
 		DECL(generic_temperature_sensor) \
 		DECL(acurite_txr) \
-		DECL(acurite_986)
+		DECL(acurite_986) \
+		DECL(hideki_ts04) \
+		DECL(oil_watchman) \
+		DECL(current_cost) \
+		DECL(emontx) \
+		DECL(ht680) \
+		DECL(s3318p) \
+		DECL(akhan_100F14) \
+		DECL(quhwa) \
+		DECL(oregon_scientific_v1) \
+		DECL(proove) \
+		DECL(bresser_3ch) \
+		DECL(springfield) \
+		DECL(oregon_scientific_sl109h) \
+		DECL(acurite_606) \
+		DECL(tfa_pool_thermometer) \
+		DECL(kedsum) \
+		DECL(blyss) \
+		DECL(steelmate) \
+		DECL(schraeder) \
+		DECL(lightwave_rf) \
+		DECL(elro_db286a) \
+		DECL(efergy_optical) \
+		DECL(hondaremote) \
+		DECL(template) \
+		DECL(fineoffset_XC0400) \
+		DECL(radiohead_ask) \
+		DECL(kerui) \
+		DECL(fineoffset_wh1050) \
+		DECL(honeywell) \
+		DECL(maverick_et73x) \
+		DECL(rftech) \
+		DECL(lacrosse_TX141TH_Bv2) \
+		DECL(acurite_00275rm) \
+		DECL(lacrosse_tx35) \
+		DECL(lacrosse_tx29)
 
 typedef struct {
 	char name[256];
 	unsigned int modulation;
-	unsigned int short_limit;
-	unsigned int long_limit;
-	unsigned int reset_limit;
+	float short_limit;
+	float long_limit;
+	float reset_limit;
 	int (*json_callback)(bitbuffer_t *bitbuffer);
 	unsigned int disabled;
-	unsigned long demod_arg;	// Decoder specific optional argument (may be pointer to struct)
+	uintptr_t demod_arg;	// Decoder specific optional argument (may be pointer to struct)
 	char **fields;			// List of fields this decoder produces; required for CSV output. NULL-terminated.
 } r_device;
 

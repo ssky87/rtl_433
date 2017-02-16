@@ -61,6 +61,43 @@ uint8_t crc8le(uint8_t const message[], unsigned nBytes, uint8_t polynomial, uin
     return reverse8(crc);
 }
 
+uint16_t crc16(uint8_t const message[], unsigned nBytes, uint16_t polynomial, uint16_t init) {
+    uint16_t remainder = init;
+    unsigned byte, bit;
+
+    for (byte = 0; byte < nBytes; ++byte) {
+        remainder ^= message[byte];
+        for (bit = 0; bit < 8; ++bit) {
+            if (remainder & 1) {
+                remainder = (remainder >> 1) ^ polynomial;
+            }
+            else {
+                remainder = (remainder >> 1);
+            }
+        }
+    }
+    return remainder;
+}
+
+uint16_t crc16_ccitt(uint8_t const message[], unsigned nBytes, uint16_t polynomial, uint16_t init) {
+    uint16_t remainder = init;
+    unsigned byte, bit;
+
+    for (byte = 0; byte < nBytes; ++byte) {
+        remainder ^= message[byte] << 8;
+        for (bit = 0; bit < 8; ++bit) {
+            if (remainder & 0x8000) {
+                remainder = (remainder << 1) ^ polynomial;
+            }
+            else {
+                remainder = (remainder << 1);
+            }
+        }
+    }
+    return remainder;
+}
+
+
 
 int byteParity(uint8_t inByte){
     inByte ^= inByte >> 4;
@@ -74,6 +111,11 @@ void local_time_str(time_t time_secs, char *buf) {
 	struct tm *tm_info;
 
 	if (time_secs == 0) {
+		extern float sample_file_pos;
+		if (sample_file_pos != -1.0) {
+			snprintf(buf, LOCAL_TIME_BUFLEN, "@%fs", sample_file_pos);
+			return;
+		}
 		time(&etime);
 	} else {
 		etime = time_secs;
